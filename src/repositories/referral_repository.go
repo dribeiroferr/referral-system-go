@@ -39,14 +39,14 @@ func (r *referralRepository) FindReferralByHash(hash string) (*models.Referral, 
 	}
 
 	if dateGenerated.Valid && dateGenerated.String != "" {
-		referral.DateGenerated, err = parseDateTime(dateGenerated.String)
+		referral.DateGenerated, err = time.Parse(time.RFC3339, dateGenerated.String)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if dateRegistered.Valid && dateRegistered.String != "" {
-		referral.DateRegistered, err = parseDateTime(dateRegistered.String)
+		referral.DateRegistered, err = time.Parse(time.RFC3339, dateRegistered.String)
 		if err != nil {
 			return nil, err
 		}
@@ -59,8 +59,4 @@ func (r *referralRepository) IncrementReferralCount(user string) error {
 	query := "UPDATE referrals SET count = count + 1, date_registered = ? WHERE user = ?"
 	_, err := r.db.Exec(query, time.Now(), user)
 	return err
-}
-func parseDateTime(dateStr string) (time.Time, error) {
-	layout := "2006-01-02 15:04:05"
-	return time.Parse(layout, dateStr)
 }
