@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Page</title>
+</head>
+<body>
+    <h1>Bem-vindo à Landing Page!</h1>
+
+    <!-- Formulário para gerar link de referência -->
+    <h2>Gerar Link de Referência</h2>
+    <form id="generate-form">
+        <label for="user">Usuário:</label>
+        <input type="text" id="user" name="user" required>
+        <button type="submit">Gerar Link</button>
+    </form>
+
+    <div id="generate-result" style="display: none;">
+        <h3>Link Gerado:</h3>
+        <p id="referral-link"></p>
+        <p id="promo-code"></p>
+    </div>
+
+    <!-- Exibir informações da referência -->
+    <h2>Informações da Referência</h2>
+    <p>Você foi referenciado por: <span id="referrer"></span></p>
+    <p>Use o código promocional: <strong id="promo_code"></strong> para obter vantagens!</p>
+
+    <!-- Exibir contagem de pontos -->
+    <h2>Contagem de Pontos</h2>
+    <p>Pontos acumulados: <span id="points-count">0</span></p>
+
+    <script>
+        // Obtém referrer e promo_code do URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const referrer = urlParams.get('referrer');
+        const promoCode = urlParams.get('promo_code');
+        document.getElementById('referrer').textContent = referrer || 'anônimo';
+        document.getElementById('promo_code').textContent = promoCode || 'N/A';
+
+        // Função para gerar link de referência
+        document.getElementById('generate-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const user = document.getElementById('user').value;
+            
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user: user })
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                document.getElementById('referral-link').textContent = `Link: ${result.referral_link}`;
+                document.getElementById('promo-code').textContent = `Promo Code: ${result.promo_code}`;
+                document.getElementById('generate-result').style.display = 'block';
+            } else {
+                alert('Erro ao gerar link: ' + result.error);
+            }
+        });
+
+        // Função para obter informações da referência e contagem de pontos
+        async function getReferralInfo() {
+            const hash = urlParams.get('hash');
+            if (hash) {
+                const response = await fetch(`/referral/${hash}`);
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('referrer').textContent = result.user || 'anônimo';
+                    document.getElementById('promo_code').textContent = result.promo_code || 'N/A';
+                    document.getElementById('points-count').textContent = result.count || 0;
+                } else {
+                    alert('Erro ao obter informações da referência: ' + result.error);
+                }
+            }
+        }
+
+        // Chama a função para obter informações da referência e contagem de pontos
+        getReferralInfo();
+    </script>
+</body>
+</html>
